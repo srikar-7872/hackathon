@@ -1,0 +1,1106 @@
+<!doctype html>
+<html lang="en" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Professional Motor Claim Estimator</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <script src="/_sdk/data_sdk.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;family=JetBrains+Mono:wght@500;600&amp;display=swap" rel="stylesheet">
+  <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        html, body {
+            height: 100%;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .app-wrapper {
+            min-height: 100%;
+            width: 100%;
+            overflow-y: auto;
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        }
+
+        @keyframes slideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideInLeft { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
+
+        .animate-slide-in { animation: slideIn 0.6s ease-out; }
+        .animate-fade-in { animation: fadeIn 0.6s ease-out; }
+        .animate-pulse-glow { animation: pulse 2s infinite; }
+
+        .gradient-header { background: linear-gradient(135deg, #0066cc 0%, #003d99 100%); }
+        .card-professional { background: #ffffff; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+
+        .stat-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+            border: 1px solid #e2e8f0;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #e2e8f0;
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #0066cc;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,102,204,0.3);
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #0066cc;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 8px rgba(0,102,204,0.3);
+        }
+
+        .damage-zone {
+            position: absolute;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+            border: 2px solid transparent;
+        }
+
+        .damage-zone:hover { transform: scale(1.05); }
+        .damage-zone.selected { box-shadow: inset 0 0 0 2px #0066cc, 0 0 12px rgba(0,102,204,0.4); background-color: rgba(0,102,204,0.15); }
+
+        .chart-container { position: relative; height: 300px; }
+
+        /* Photo Upload Modal */
+        .photo-modal { animation: slideUp 0.4s ease-out; }
+        @keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        .upload-zone {
+            border: 2px dashed #0066cc;
+            background: linear-gradient(135deg, rgba(0,102,204,0.05), rgba(0,102,204,0.02));
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .upload-zone:hover { border-color: #0052a3; background: linear-gradient(135deg, rgba(0,102,204,0.1), rgba(0,102,204,0.05)); }
+        .upload-zone.dragover { border-color: #0066cc; background: linear-gradient(135deg, rgba(0,102,204,0.15), rgba(0,102,204,0.1)); box-shadow: 0 0 20px rgba(0,102,204,0.2); }
+
+        .photo-thumbnail { position: relative; transition: all 0.2s ease; }
+        .photo-thumbnail:hover { transform: scale(1.05); }
+        .photo-thumbnail:hover .delete-btn { opacity: 1; }
+
+        .delete-btn { opacity: 0; transition: opacity 0.2s ease; }
+
+        .severity-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .severity-minor { background: #d1fae5; color: #065f46; }
+        .severity-moderate { background: #fed7aa; color: #92400e; }
+        .severity-severe { background: #fee2e2; color: #7f1d1d; }
+
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .premium-button {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .premium-button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .premium-button:active::before {
+            width: 300px;
+            height: 300px;
+        }
+    </style>
+  <style>body { box-sizing: border-box; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+ </head>
+ <body class="h-full">
+  <div class="app-wrapper"><!-- Premium Navigation -->
+   <nav class="gradient-header sticky top-0 z-50 shadow-lg">
+    <div class="max-w-7xl mx-auto px-6 py-4">
+     <div class="flex items-center justify-between">
+      <div class="flex items-center gap-4">
+       <div class="w-11 h-11 rounded-lg bg-white/20 flex items-center justify-center">
+        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+        </svg>
+       </div>
+       <div>
+        <h1 id="nav-title" class="text-lg font-bold text-white">Professional Motor Claim Estimator</h1>
+        <p id="nav-tagline" class="text-xs text-blue-100">Advanced AI-Powered Damage Analysis</p>
+       </div>
+      </div>
+      <div class="flex items-center gap-3">
+       <div class="hidden md:flex items-center gap-2 bg-white/20 text-white px-3 py-1.5 rounded-full text-xs font-semibold"><span class="w-2 h-2 bg-green-400 rounded-full animate-pulse-glow"></span> System Online
+       </div><button onclick="toggleHistoryPanel()" class="px-4 py-2 bg-white/10 hover:bg-white/20 text-white font-medium text-sm rounded-lg transition-all">
+        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg> History </button><button onclick="resetForm()" class="px-4 py-2 bg-white/10 hover:bg-white/20 text-white font-medium text-sm rounded-lg transition-all">Reset</button>
+      </div>
+     </div>
+    </div>
+   </nav><!-- Main Content -->
+   <section class="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+    <div class="grid lg:grid-cols-3 gap-8"><!-- Left Panel: Input Form -->
+     <div class="lg:col-span-2 space-y-6 animate-slide-in"><!-- Vehicle Information Card -->
+      <div class="card-professional rounded-xl p-6">
+       <div class="flex items-center gap-3 mb-5">
+        <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-600 to-blue-700 flex items-center justify-center">
+         <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+         </svg>
+        </div>
+        <div>
+         <h3 class="text-lg font-bold text-slate-800">Vehicle Details</h3>
+         <p class="text-xs text-slate-500">Enter your vehicle information</p>
+        </div>
+       </div>
+       <div class="grid md:grid-cols-2 gap-4">
+        <div>
+         <label class="block text-xs font-semibold text-slate-700 mb-2 uppercase tracking-wide">Vehicle Make</label> <select id="vehicleMake" onchange="updateModels()" class="w-full px-3 py-2.5 rounded-lg border border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all bg-white text-sm"> <option value="">Select Make</option> <option value="toyota">Toyota</option> <option value="honda">Honda</option> <option value="ford">Ford</option> <option value="chevrolet">Chevrolet</option> <option value="bmw">BMW</option> <option value="mercedes">Mercedes-Benz</option> <option value="audi">Audi</option> <option value="nissan">Nissan</option> <option value="hyundai">Hyundai</option> <option value="kia">Kia</option> </select>
+        </div>
+        <div>
+         <label class="block text-xs font-semibold text-slate-700 mb-2 uppercase tracking-wide">Model</label> <select id="vehicleModel" class="w-full px-3 py-2.5 rounded-lg border border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all bg-white text-sm"> <option value="">Select Model</option> </select>
+        </div>
+        <div>
+         <label class="block text-xs font-semibold text-slate-700 mb-2 uppercase tracking-wide">Year</label> <select id="vehicleYear" class="w-full px-3 py-2.5 rounded-lg border border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all bg-white text-sm"> <option value="">Select Year</option> </select>
+        </div>
+        <div>
+         <label class="block text-xs font-semibold text-slate-700 mb-2 uppercase tracking-wide">Mileage</label> <input type="number" id="mileage" placeholder="e.g., 45000" class="w-full px-3 py-2.5 rounded-lg border border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all bg-white text-sm">
+        </div>
+       </div>
+      </div><!-- Damage Assessment Card -->
+      <div class="card-professional rounded-xl p-6">
+       <div class="flex items-center gap-3 mb-5">
+        <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-orange-600 to-orange-700 flex items-center justify-center">
+         <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+         </svg>
+        </div>
+        <div>
+         <h3 class="text-lg font-bold text-slate-800">Damage Assessment</h3>
+         <p class="text-xs text-slate-500">Select damaged areas and severity</p>
+        </div>
+       </div><!-- Vehicle Diagram -->
+       <div class="bg-slate-50 rounded-lg p-4 mb-6 border border-slate-200">
+        <div class="flex justify-center mb-4">
+         <svg viewbox="0 0 400 200" class="w-full max-w-sm" style="max-height: 250px;"><!-- Car SVG --> <path d="M50 120 Q50 100 70 90 L120 80 Q140 60 180 55 L220 55 Q260 60 280 80 L330 90 Q350 100 350 120 L350 140 Q350 150 340 150 L60 150 Q50 150 50 140 Z" fill="#cbd5e1" stroke="#94a3b8" stroke-width="2" /> <path d="M130 85 Q145 68 175 62 L225 62 Q255 68 270 85 L280 90 L120 90 Z" fill="#dbeafe" stroke="#94a3b8" stroke-width="1" /> <circle cx="100" cy="150" r="25" fill="#374151" stroke="#1f2937" stroke-width="3" /> <circle cx="100" cy="150" r="12" fill="#6b7280" /> <circle cx="300" cy="150" r="25" fill="#374151" stroke="#1f2937" stroke-width="3" /> <circle cx="300" cy="150" r="12" fill="#6b7280" /> <ellipse cx="60" cy="115" rx="8" ry="12" fill="#fef3c7" stroke="#fbbf24" stroke-width="1" /> <ellipse cx="340" cy="115" rx="8" ry="12" fill="#fef3c7" stroke="#fbbf24" stroke-width="1" />
+         </svg>
+        </div><!-- Damage Zones -->
+        <div class="relative h-80 bg-gradient-to-br from-slate-100 to-slate-200 rounded-lg p-4 mb-4">
+         <!-- Zone: Front Bumper -->
+         <div class="damage-zone front-bumper" data-part="front_bumper" style="left: 4%; top: 45%; width: 10%; height: 30%; background: rgba(255,107,53,0.1); border: 1px dashed #ff6b35;" onclick="toggleDamageZone(event)" title="Front Bumper"><span class="text-xs font-semibold text-slate-600 whitespace-nowrap block mt-8">Front</span>
+         </div><!-- Zone: Hood -->
+         <div class="damage-zone hood" data-part="hood" style="left: 18%; top: 20%; width: 25%; height: 35%; background: rgba(255,107,53,0.1); border: 1px dashed #ff6b35;" onclick="toggleDamageZone(event)" title="Hood"><span class="text-xs font-semibold text-slate-600">Hood</span>
+         </div><!-- Zone: Windshield -->
+         <div class="damage-zone windshield" data-part="windshield" style="left: 32%; top: 5%; width: 18%; height: 18%; background: rgba(59,130,246,0.1); border: 1px dashed #3b82f6;" onclick="toggleDamageZone(event)" title="Windshield"><span class="text-xs font-semibold text-slate-600">Glass</span>
+         </div><!-- Zone: Roof -->
+         <div class="damage-zone roof" data-part="roof" style="left: 43%; top: 3%; width: 16%; height: 12%; background: rgba(168,85,247,0.1); border: 1px dashed #a855f7;" onclick="toggleDamageZone(event)" title="Roof"><span class="text-xs font-semibold text-slate-600">Roof</span>
+         </div><!-- Zone: Trunk -->
+         <div class="damage-zone trunk" data-part="trunk" style="left: 58%; top: 20%; width: 25%; height: 35%; background: rgba(34,197,94,0.1); border: 1px dashed #22c55e;" onclick="toggleDamageZone(event)" title="Trunk"><span class="text-xs font-semibold text-slate-600">Trunk</span>
+         </div><!-- Zone: Rear Bumper -->
+         <div class="damage-zone rear-bumper" data-part="rear_bumper" style="left: 86%; top: 45%; width: 10%; height: 30%; background: rgba(34,197,94,0.1); border: 1px dashed #22c55e;" onclick="toggleDamageZone(event)" title="Rear Bumper"><span class="text-xs font-semibold text-slate-600 whitespace-nowrap">Rear</span>
+         </div><!-- Zone: Left Door -->
+         <div class="damage-zone left-door" data-part="left_door" style="left: 23%; top: 58%; width: 22%; height: 28%; background: rgba(14,165,233,0.1); border: 1px dashed #0ea5e9;" onclick="toggleDamageZone(event)" title="Left Door"><span class="text-xs font-semibold text-slate-600">Left</span>
+         </div><!-- Zone: Right Door -->
+         <div class="damage-zone right-door" data-part="right_door" style="left: 55%; top: 58%; width: 22%; height: 28%; background: rgba(20,184,166,0.1); border: 1px dashed #14b8a6;" onclick="toggleDamageZone(event)" title="Right Door"><span class="text-xs font-semibold text-slate-600">Right</span>
+         </div>
+        </div>
+        <p class="text-xs text-slate-500 text-center">Click on vehicle areas to select damage</p>
+       </div><!-- Severity Slider -->
+       <div class="mb-6">
+        <div class="flex justify-between items-center mb-3">
+         <label class="text-sm font-semibold text-slate-700">Damage Severity</label> <span id="severityValue" class="text-sm font-bold text-blue-600">Moderate (50%)</span>
+        </div><input type="range" id="damageSeverity" min="1" max="100" value="50" onchange="updateSeverity()" class="w-full">
+        <div class="flex justify-between text-xs text-slate-500 mt-2"><span>Minor</span> <span>Moderate</span> <span>Severe</span>
+        </div>
+       </div><!-- Additional Features -->
+       <div class="space-y-3">
+        <p class="text-sm font-semibold text-slate-700 mb-3">Additional Damage</p>
+        <div class="grid md:grid-cols-2 gap-3">
+         <label class="flex items-center gap-3 p-3 border border-slate-200 rounded-lg cursor-pointer hover:bg-blue-50 hover:border-blue-300 transition-colors"> <input type="checkbox" id="airbagDeployed" class="w-4 h-4 rounded border-slate-300 text-blue-600">
+          <div><span class="text-sm font-medium text-slate-700">Airbag Deployed</span>
+           <p class="text-xs text-slate-500">+$2500-3500</p>
+          </div></label> <label class="flex items-center gap-3 p-3 border border-slate-200 rounded-lg cursor-pointer hover:bg-blue-50 hover:border-blue-300 transition-colors"> <input type="checkbox" id="structuralDamage" class="w-4 h-4 rounded border-slate-300 text-blue-600">
+          <div><span class="text-sm font-medium text-slate-700">Structural</span>
+           <p class="text-xs text-slate-500">Frame/chassis damage</p>
+          </div></label> <label class="flex items-center gap-3 p-3 border border-slate-200 rounded-lg cursor-pointer hover:bg-blue-50 hover:border-blue-300 transition-colors"> <input type="checkbox" id="waterDamage" class="w-4 h-4 rounded border-slate-300 text-blue-600">
+          <div><span class="text-sm font-medium text-slate-700">Water Damage</span>
+           <p class="text-xs text-slate-500">Electrical components</p>
+          </div></label> <label class="flex items-center gap-3 p-3 border border-slate-200 rounded-lg cursor-pointer hover:bg-blue-50 hover:border-blue-300 transition-colors"> <input type="checkbox" id="mechanicalIssues" class="w-4 h-4 rounded border-slate-300 text-blue-600">
+          <div><span class="text-sm font-medium text-slate-700">Mechanical</span>
+           <p class="text-xs text-slate-500">Engine/transmission</p>
+          </div></label>
+        </div>
+       </div>
+      </div><!-- Generate Estimate Button --> <button id="calculateBtn" onclick="calculateEstimate()" class="w-full py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-bold rounded-lg shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2">
+       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+       </svg><span id="calculateBtnText">Generate Estimate</span> </button>
+     </div><!-- Right Panel: Results -->
+     <div class="space-y-6 animate-fade-in"><!-- Results Card -->
+      <div class="card-professional rounded-xl p-6">
+       <div class="flex items-center gap-3 mb-5">
+        <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-green-600 to-green-700 flex items-center justify-center">
+         <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+         </svg>
+        </div>
+        <div>
+         <h3 class="text-lg font-bold text-slate-800">Estimate Summary</h3>
+         <p class="text-xs text-slate-500">Real-time calculation</p>
+        </div>
+       </div>
+       <div id="estimateDisplay" class="text-center py-8 bg-gradient-to-br from-slate-50 to-slate-100 rounded-lg border-2 border-slate-200 mb-6">
+        <p class="text-xs text-slate-500 mb-2 uppercase tracking-wide font-semibold">Estimated Repair Cost</p>
+        <p id="totalEstimate" class="text-5xl font-bold text-slate-800">$0</p>
+        <p class="text-xs text-slate-400 mt-3">*Estimate may vary based on actual damage assessment</p>
+       </div><!-- Quick Metrics -->
+       <div class="grid grid-cols-2 gap-4 mb-6">
+        <div class="stat-card rounded-lg p-4 text-center">
+         <p class="text-2xl font-bold text-blue-600" id="repairDays">0</p>
+         <p class="text-xs text-slate-600 mt-1">Days to Repair</p>
+        </div>
+        <div class="stat-card rounded-lg p-4 text-center">
+         <p class="text-2xl font-bold text-orange-600" id="partsCount">0</p>
+         <p class="text-xs text-slate-600 mt-1">Parts Required</p>
+        </div>
+       </div>
+       <div class="grid grid-cols-2 gap-4 mb-6">
+        <div class="stat-card rounded-lg p-4 text-center">
+         <p class="text-2xl font-bold text-emerald-600" id="totalLabor">$0</p>
+         <p class="text-xs text-slate-600 mt-1">Labor Cost</p>
+        </div>
+        <div class="stat-card rounded-lg p-4 text-center">
+         <p class="text-2xl font-bold text-purple-600" id="totalParts">$0</p>
+         <p class="text-xs text-slate-600 mt-1">Parts Cost</p>
+        </div>
+       </div><!-- Confidence Score -->
+       <div id="confidenceSection" class="p-4 bg-blue-50 rounded-lg border border-blue-200 hidden">
+        <div class="flex items-center justify-between mb-2">
+         <span class="text-sm font-semibold text-slate-700">Estimate Confidence</span> <span id="confidenceScore" class="text-sm font-bold text-blue-600">0%</span>
+        </div>
+        <div class="w-full bg-slate-200 rounded-full h-2">
+         <div id="confidenceBar" class="bg-gradient-to-r from-blue-500 to-blue-600 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
+        </div>
+        <p class="text-xs text-slate-600 mt-2">Higher confidence with more damage details</p>
+       </div>
+      </div><!-- Cost Breakdown -->
+      <div id="costBreakdown" class="card-professional rounded-xl p-6 hidden">
+       <h4 class="text-sm font-bold text-slate-800 mb-4 uppercase tracking-wide">Detailed Breakdown</h4>
+       <div id="breakdownList" class="space-y-2 max-h-64 overflow-y-auto"><!-- Dynamically populated -->
+       </div>
+      </div><!-- Actions -->
+      <div id="actionsSection" class="space-y-3 hidden">
+       <button onclick="generateReport()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg transition-all flex items-center justify-center gap-2 text-sm">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg> Generate PDF Report </button> <button onclick="saveEstimate()" class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-all flex items-center justify-center gap-2 text-sm">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+        </svg> Save to Cloud </button>
+      </div>
+     </div>
+    </div>
+   </section>
+  </div><!-- Photo Upload Modal -->
+  <div id="photoModal" class="fixed inset-0 bg-black/50 z-40 hidden flex items-end sm:items-center justify-center p-4">
+   <div class="bg-white w-full sm:max-w-2xl rounded-t-3xl sm:rounded-2xl shadow-2xl max-h-[90vh] overflow-auto photo-modal">
+    <div class="p-6 border-b border-slate-200 sticky top-0 bg-white/95 backdrop-blur-sm flex items-center justify-between">
+     <div>
+      <h3 class="text-xl font-bold text-slate-800">Document Damage</h3>
+      <p id="modalPartName" class="text-sm text-slate-500 mt-1">Select damage area</p>
+     </div><button onclick="closePhotoModal()" class="w-10 h-10 rounded-lg bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition-colors">
+      <svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+      </svg></button>
+    </div>
+    <div class="p-6 space-y-6"><!-- Photo Upload Zone -->
+     <div class="upload-zone rounded-xl p-8 text-center cursor-pointer transition-all" id="uploadZone" ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" onclick="document.getElementById('photoInput').click()">
+      <svg class="w-16 h-16 text-blue-500 mx-auto mb-3 opacity-60" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v16m8-8H4M7.5 7.5l9 9m0-9l-9 9" />
+      </svg>
+      <p class="text-lg font-semibold text-slate-700 mb-1">Drag photos here or click to upload</p>
+      <p class="text-sm text-slate-500">Supports JPG, PNG • Max 10MB per photo • Up to 5 photos</p><input type="file" id="photoInput" multiple accept="image/*" class="hidden" onchange="handleFileSelect(event)">
+     </div><!-- Photo Gallery -->
+     <div id="photoGallery" class="grid grid-cols-3 gap-3 hidden"><!-- Photos will be added here -->
+     </div><!-- Damage Type Selection -->
+     <div><label class="block text-sm font-semibold text-slate-700 mb-3">Damage Type</label>
+      <div class="grid grid-cols-2 sm:grid-cols-3 gap-3"><label class="flex items-center p-3 border-2 border-slate-200 rounded-lg cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-all"> <input type="radio" name="damageType" value="dent" class="w-4 h-4 text-blue-600" checked> <span class="ml-2 text-sm font-medium text-slate-700">🔵 Dent</span> </label> <label class="flex items-center p-3 border-2 border-slate-200 rounded-lg cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-all"> <input type="radio" name="damageType" value="scratch" class="w-4 h-4 text-blue-600"> <span class="ml-2 text-sm font-medium text-slate-700">✓ Scratch</span> </label> <label class="flex items-center p-3 border-2 border-slate-200 rounded-lg cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-all"> <input type="radio" name="damageType" value="crack" class="w-4 h-4 text-blue-600"> <span class="ml-2 text-sm font-medium text-slate-700">⚡ Crack</span> </label> <label class="flex items-center p-3 border-2 border-slate-200 rounded-lg cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-all"> <input type="radio" name="damageType" value="misalignment" class="w-4 h-4 text-blue-600"> <span class="ml-2 text-sm font-medium text-slate-700">↔ Misalignment</span> </label> <label class="flex items-center p-3 border-2 border-slate-200 rounded-lg cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-all"> <input type="radio" name="damageType" value="rust" class="w-4 h-4 text-blue-600"> <span class="ml-2 text-sm font-medium text-slate-700">🟠 Rust</span> </label> <label class="flex items-center p-3 border-2 border-slate-200 rounded-lg cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-all"> <input type="radio" name="damageType" value="paint" class="w-4 h-4 text-blue-600"> <span class="ml-2 text-sm font-medium text-slate-700">🎨 Paint</span> </label>
+      </div>
+     </div><!-- Severity Level -->
+     <div><label class="block text-sm font-semibold text-slate-700 mb-3">Severity Level</label>
+      <div class="grid grid-cols-3 gap-3"><button type="button" onclick="setSeverity('minor')" class="py-3 px-4 border-2 border-slate-200 rounded-lg font-semibold text-sm hover:border-green-500 hover:bg-green-50 transition-all severity-btn" data-severity="minor"> 🟢 Minor </button> <button type="button" onclick="setSeverity('moderate')" class="py-3 px-4 border-2 border-slate-200 rounded-lg font-semibold text-sm hover:border-amber-500 hover:bg-amber-50 transition-all severity-btn active" data-severity="moderate"> 🟡 Moderate </button> <button type="button" onclick="setSeverity('severe')" class="py-3 px-4 border-2 border-slate-200 rounded-lg font-semibold text-sm hover:border-red-500 hover:bg-red-50 transition-all severity-btn" data-severity="severe"> 🔴 Severe </button>
+      </div>
+     </div><!-- Notes -->
+     <div><label class="block text-sm font-semibold text-slate-700 mb-2">Additional Notes (Optional)</label> <textarea id="damageNotes" placeholder="Describe the damage in detail... (e.g., Impact occurred on driver side, near door handle)" class="w-full px-4 py-3 rounded-lg border border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all text-sm resize-none" rows="3"></textarea>
+     </div><!-- Action Buttons -->
+     <div class="flex gap-3 border-t border-slate-200 pt-6"><button onclick="closePhotoModal()" class="flex-1 py-3 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-lg transition-all"> Cancel </button> <button onclick="saveDamageZone()" class="flex-1 py-3 px-4 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold rounded-lg transition-all premium-button flex items-center justify-center gap-2">
+       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+       </svg> Save Damage </button>
+     </div>
+    </div>
+   </div>
+  </div><!-- History Panel -->
+  <div id="historyPanel" class="fixed inset-0 bg-black/50 z-40 hidden flex items-end sm:items-center justify-end">
+   <div class="bg-white w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl shadow-2xl max-h-screen overflow-auto">
+    <div class="p-6 border-b border-slate-200 flex items-center justify-between">
+     <h3 class="text-lg font-bold text-slate-800">Estimate History</h3><button onclick="toggleHistoryPanel()" class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition-colors">
+      <svg class="w-4 h-4 text-slate-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+      </svg></button>
+    </div>
+    <div id="historyList" class="p-6 space-y-3">
+     <p class="text-center text-slate-500 text-sm py-8">No estimates saved yet</p>
+    </div>
+   </div>
+  </div><!-- Toast Notification -->
+  <div id="toast" class="fixed bottom-6 right-6 bg-slate-800 text-white px-4 py-3 rounded-lg shadow-lg transform translate-y-20 opacity-0 transition-all duration-300 flex items-center gap-3 z-50 text-sm">
+   <svg id="toastIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+   </svg><span id="toastMessage">Action completed</span>
+  </div><!-- Report Modal -->
+  <div id="reportModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+   <div class="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-auto">
+    <div class="p-6 border-b border-slate-200 flex items-center justify-between sticky top-0 bg-white">
+     <h3 class="text-xl font-bold text-slate-800">Complete Estimate Report</h3><button onclick="closeModal()" class="w-10 h-10 rounded-lg bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition-colors">
+      <svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+      </svg></button>
+    </div>
+    <div id="reportContent" class="p-6"><!-- Dynamically populated -->
+    </div>
+    <div class="p-6 border-t border-slate-200 flex gap-3 justify-end sticky bottom-0 bg-white">
+     <button onclick="closeModal()" class="px-6 py-2 text-slate-600 font-semibold hover:text-slate-800 transition-colors">Close</button> <button onclick="printReport()" class="px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors">Print Report</button>
+    </div>
+   </div>
+  </div><!-- Footer -->
+  <footer class="border-t border-slate-200 bg-white/50 py-6 mt-12">
+   <div class="max-w-7xl mx-auto px-6 text-center">
+    <p class="text-slate-600 text-xs">© 2024 Professional Motor Claim Estimator. Estimates are approximations and should not be considered as final quotes.</p>
+    <p class="text-slate-500 text-xs mt-2">All data is securely stored and encrypted.</p>
+   </div>
+  </footer>
+  <script>
+        // Configuration
+        const defaultConfig = {
+            app_title: 'Professional Motor Claim Estimator',
+            tagline: 'Advanced AI-Powered Damage Analysis',
+            company_name: 'Insurance Claims Pro',
+            estimate_button_text: 'Generate Estimate',
+            primary_color: '#0066cc',
+            secondary_color: '#003d99',
+            accent_color: '#ff6b35',
+            background_color: '#f8fafc',
+            text_color: '#1e293b'
+        };
+
+        // Initialize Data SDK
+        let estimatesData = [];
+        const dataHandler = {
+            onDataChanged(data) {
+                estimatesData = data || [];
+                updateEstimatesHistory();
+            }
+        };
+
+        // Vehicle data
+        const vehicleModels = {
+            toyota: ['Camry', 'Corolla', 'RAV4', 'Highlander', 'Tacoma', 'Prius'],
+            honda: ['Civic', 'Accord', 'CR-V', 'Pilot', 'HR-V', 'Odyssey'],
+            ford: ['F-150', 'Mustang', 'Explorer', 'Escape', 'Edge', 'Bronco'],
+            chevrolet: ['Silverado', 'Equinox', 'Malibu', 'Tahoe', 'Camaro', 'Traverse'],
+            bmw: ['3 Series', '5 Series', 'X3', 'X5', 'X7', 'M3'],
+            mercedes: ['C-Class', 'E-Class', 'GLC', 'GLE', 'S-Class', 'A-Class'],
+            audi: ['A4', 'A6', 'Q5', 'Q7', 'e-tron', 'A3'],
+            nissan: ['Altima', 'Rogue', 'Sentra', 'Pathfinder', 'Maxima', 'Murano'],
+            hyundai: ['Elantra', 'Sonata', 'Tucson', 'Santa Fe', 'Kona', 'Palisade'],
+            kia: ['Forte', 'K5', 'Sportage', 'Telluride', 'Sorento', 'Soul']
+        };
+
+        // Part costs by category
+        const partCosts = {
+            front_bumper: { base: 800, labor: 300, paint: 400 },
+            rear_bumper: { base: 750, labor: 280, paint: 380 },
+            hood: { base: 1200, labor: 400, paint: 500 },
+            trunk: { base: 900, labor: 350, paint: 450 },
+            windshield: { base: 500, labor: 200, paint: 0 },
+            roof: { base: 2000, labor: 800, paint: 600 },
+            left_door: { base: 1100, labor: 450, paint: 480 },
+            right_door: { base: 1100, labor: 450, paint: 480 }
+        };
+
+        // Luxury multipliers
+        const luxuryMultipliers = {
+            toyota: 1.0, honda: 1.0, ford: 1.1, chevrolet: 1.1,
+            bmw: 1.8, mercedes: 2.0, audi: 1.7, nissan: 1.0,
+            hyundai: 0.9, kia: 0.9
+        };
+
+        // State
+        let selectedDamageZones = new Set();
+        let currentEstimate = null;
+        let currentDamageZone = null;
+        let uploadedPhotos = [];
+        let damageSeverity = 'moderate';
+
+        // Initialize
+        function init() {
+            populateYears();
+            
+            if (window.elementSdk) {
+                window.elementSdk.init({
+                    defaultConfig,
+                    onConfigChange: async (config) => {
+                        document.getElementById('nav-title').textContent = config.app_title || defaultConfig.app_title;
+                        document.getElementById('nav-tagline').textContent = config.tagline || defaultConfig.tagline;
+                        document.getElementById('calculateBtnText').textContent = config.estimate_button_text || defaultConfig.estimate_button_text;
+                    },
+                    mapToCapabilities: (config) => ({
+                        recolorables: [
+                            {
+                                get: () => config.primary_color || defaultConfig.primary_color,
+                                set: (value) => window.elementSdk.setConfig({ primary_color: value })
+                            },
+                            {
+                                get: () => config.secondary_color || defaultConfig.secondary_color,
+                                set: (value) => window.elementSdk.setConfig({ secondary_color: value })
+                            },
+                            {
+                                get: () => config.accent_color || defaultConfig.accent_color,
+                                set: (value) => window.elementSdk.setConfig({ accent_color: value })
+                            },
+                            {
+                                get: () => config.background_color || defaultConfig.background_color,
+                                set: (value) => window.elementSdk.setConfig({ background_color: value })
+                            },
+                            {
+                                get: () => config.text_color || defaultConfig.text_color,
+                                set: (value) => window.elementSdk.setConfig({ text_color: value })
+                            }
+                        ],
+                        borderables: [],
+                        fontEditable: undefined,
+                        fontSizeable: undefined
+                    }),
+                    mapToEditPanelValues: (config) => new Map([
+                        ['app_title', config.app_title || defaultConfig.app_title],
+                        ['tagline', config.tagline || defaultConfig.tagline],
+                        ['estimate_button_text', config.estimate_button_text || defaultConfig.estimate_button_text]
+                    ])
+                });
+            }
+        }
+
+        function populateYears() {
+            const yearSelect = document.getElementById('vehicleYear');
+            const currentYear = new Date().getFullYear();
+            for (let year = currentYear + 1; year >= currentYear - 25; year--) {
+                const option = document.createElement('option');
+                option.value = year;
+                option.textContent = year;
+                yearSelect.appendChild(option);
+            }
+        }
+
+        function updateModels() {
+            const make = document.getElementById('vehicleMake').value;
+            const modelSelect = document.getElementById('vehicleModel');
+            modelSelect.innerHTML = '<option value="">Select Model</option>';
+            
+            if (make && vehicleModels[make]) {
+                vehicleModels[make].forEach(model => {
+                    const option = document.createElement('option');
+                    option.value = model.toLowerCase().replace(/\s+/g, '-');
+                    option.textContent = model;
+                    modelSelect.appendChild(option);
+                });
+            }
+        }
+
+        function updateSeverity() {
+            const severity = document.getElementById('damageSeverity').value;
+            const severityText = severity <= 33 ? 'Minor' : severity <= 66 ? 'Moderate' : 'Severe';
+            document.getElementById('severityValue').textContent = `${severityText} (${severity}%)`;
+        }
+
+        function toggleDamageZone(event) {
+            const element = event.currentTarget;
+            const part = element.dataset.part;
+            currentDamageZone = part;
+            openPhotoModal(part, element);
+        }
+
+        function openPhotoModal(part, element) {
+            const partName = element.title || part.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+            document.getElementById('modalPartName').textContent = partName;
+            document.getElementById('photoModal').classList.remove('hidden');
+            uploadedPhotos = [];
+            updatePhotoGallery();
+            damageSeverity = 'moderate';
+            setSeverity('moderate');
+            document.getElementById('damageNotes').value = '';
+            document.querySelectorAll('input[name="damageType"]')[0].checked = true;
+        }
+
+        function closePhotoModal() {
+            document.getElementById('photoModal').classList.add('hidden');
+            uploadedPhotos = [];
+            updatePhotoGallery();
+        }
+
+        function handleDragOver(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            document.getElementById('uploadZone').classList.add('dragover');
+        }
+
+        function handleDragLeave(event) {
+            event.preventDefault();
+            document.getElementById('uploadZone').classList.remove('dragover');
+        }
+
+        function handleDrop(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            document.getElementById('uploadZone').classList.remove('dragover');
+            const files = event.dataTransfer.files;
+            processFiles(files);
+        }
+
+        function handleFileSelect(event) {
+            const files = event.target.files;
+            processFiles(files);
+        }
+
+        function processFiles(files) {
+            if (uploadedPhotos.length >= 5) {
+                showToast('Maximum 5 photos per damage area', 'error');
+                return;
+            }
+
+            for (let file of files) {
+                if (uploadedPhotos.length >= 5) break;
+
+                if (file.size > 10 * 1024 * 1024) {
+                    showToast(`File ${file.name} exceeds 10MB limit`, 'error');
+                    continue;
+                }
+
+                if (!file.type.startsWith('image/')) {
+                    showToast(`${file.name} is not an image`, 'error');
+                    continue;
+                }
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    uploadedPhotos.push({
+                        id: Date.now() + Math.random(),
+                        data: e.target.result,
+                        name: file.name
+                    });
+                    updatePhotoGallery();
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function updatePhotoGallery() {
+            const gallery = document.getElementById('photoGallery');
+            if (uploadedPhotos.length === 0) {
+                gallery.classList.add('hidden');
+                return;
+            }
+
+            gallery.classList.remove('hidden');
+            gallery.innerHTML = uploadedPhotos.map(photo => `
+                <div class="photo-thumbnail relative rounded-lg overflow-hidden border-2 border-slate-200 h-24 group">
+                    <img src="${photo.data}" alt="Damage photo" class="w-full h-full object-cover">
+                    <div class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors"></div>
+                    <button onclick="deletePhoto(${photo.id})" class="delete-btn absolute top-1 right-1 w-6 h-6 bg-red-600 hover:bg-red-700 text-white rounded-full flex items-center justify-center text-xs font-bold transition-all">
+                        ✕
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function deletePhoto(photoId) {
+            uploadedPhotos = uploadedPhotos.filter(p => p.id !== photoId);
+            updatePhotoGallery();
+        }
+
+        function setSeverity(level) {
+            damageSeverity = level;
+            document.querySelectorAll('.severity-btn').forEach(btn => {
+                btn.classList.remove('active', 'border-green-500', 'bg-green-100', 'border-amber-500', 'bg-amber-100', 'border-red-500', 'bg-red-100');
+            });
+
+            const btn = document.querySelector(`.severity-btn[data-severity="${level}"]`);
+            if (level === 'minor') {
+                btn.classList.add('active', 'border-green-500', 'bg-green-50');
+            } else if (level === 'moderate') {
+                btn.classList.add('active', 'border-amber-500', 'bg-amber-50');
+            } else if (level === 'severe') {
+                btn.classList.add('active', 'border-red-500', 'bg-red-50');
+            }
+        }
+
+        function saveDamageZone() {
+            if (!currentDamageZone) return;
+
+            const damageType = document.querySelector('input[name="damageType"]:checked').value;
+            const notes = document.getElementById('damageNotes').value;
+
+            selectedDamageZones.add(currentDamageZone);
+            const element = document.querySelector(`.damage-zone[data-part="${currentDamageZone}"]`);
+            element.classList.add('selected');
+
+            // Add visual indicator
+            const severityColor = damageSeverity === 'minor' ? '#10b981' : damageSeverity === 'moderate' ? '#f59e0b' : '#ef4444';
+            element.style.borderColor = severityColor;
+            element.style.boxShadow = `inset 0 0 0 2px ${severityColor}, 0 0 12px ${severityColor}40`;
+
+            showToast(`${element.title} documented as ${damageSeverity} ${damageType} damage`, 'success');
+            closePhotoModal();
+        }
+
+        function calculateEstimate() {
+            const make = document.getElementById('vehicleMake').value;
+            const model = document.getElementById('vehicleModel').value;
+            const year = document.getElementById('vehicleYear').value;
+            const mileage = document.getElementById('mileage').value;
+            const severity = parseInt(document.getElementById('damageSeverity').value);
+
+            // Validation
+            if (!make || !model || !year) {
+                showToast('Please fill in all vehicle information', 'error');
+                return;
+            }
+
+            if (selectedDamageZones.size === 0) {
+                showToast('Please select at least one damaged area', 'error');
+                return;
+            }
+
+            // Calculate costs
+            const luxuryMultiplier = luxuryMultipliers[make] || 1.0;
+            const severityMultiplier = 0.3 + (severity / 100) * 0.7;
+            const ageMultiplier = Math.max(0.7, 1 - ((new Date().getFullYear() - parseInt(year)) * 0.02));
+
+            let totalCost = 0;
+            let breakdown = [];
+            let partsNeeded = 0;
+
+            selectedDamageZones.forEach(zone => {
+                const costs = partCosts[zone];
+                if (costs) {
+                    const partTotal = (costs.base + costs.labor + costs.paint) * luxuryMultiplier * severityMultiplier * ageMultiplier;
+                    totalCost += partTotal;
+                    partsNeeded++;
+                    breakdown.push({
+                        name: zone.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+                        parts: Math.round(costs.base * luxuryMultiplier * ageMultiplier),
+                        labor: Math.round(costs.labor * severityMultiplier),
+                        paint: Math.round(costs.paint * severityMultiplier),
+                        total: Math.round(partTotal)
+                    });
+                }
+            });
+
+            // Additional costs
+            if (document.getElementById('airbagDeployed').checked) {
+                const airbagCost = 2500 * luxuryMultiplier;
+                totalCost += airbagCost;
+                breakdown.push({ name: 'Airbag Replacement', parts: Math.round(airbagCost * 0.7), labor: Math.round(airbagCost * 0.3), paint: 0, total: Math.round(airbagCost) });
+            }
+
+            if (document.getElementById('structuralDamage').checked) {
+                const structuralCost = 4000 * luxuryMultiplier * severityMultiplier;
+                totalCost += structuralCost;
+                breakdown.push({ name: 'Structural Repair', parts: Math.round(structuralCost * 0.4), labor: Math.round(structuralCost * 0.6), paint: 0, total: Math.round(structuralCost) });
+            }
+
+            if (document.getElementById('waterDamage').checked) {
+                const waterCost = 3500 * luxuryMultiplier;
+                totalCost += waterCost;
+                breakdown.push({ name: 'Water Damage Repair', parts: Math.round(waterCost * 0.5), labor: Math.round(waterCost * 0.5), paint: 0, total: Math.round(waterCost) });
+            }
+
+            if (document.getElementById('mechanicalIssues').checked) {
+                const mechanicalCost = 5000 * luxuryMultiplier * severityMultiplier;
+                totalCost += mechanicalCost;
+                breakdown.push({ name: 'Mechanical Repair', parts: Math.round(mechanicalCost * 0.6), labor: Math.round(mechanicalCost * 0.4), paint: 0, total: Math.round(mechanicalCost) });
+            }
+
+            // Store estimate
+            currentEstimate = {
+                make: make.charAt(0).toUpperCase() + make.slice(1),
+                model,
+                year,
+                mileage,
+                severity,
+                totalCost: Math.round(totalCost),
+                breakdown,
+                partsNeeded,
+                repairDays: Math.ceil(partsNeeded * 1.5 + (severity / 25)),
+                confidence: Math.min(95, 70 + (breakdown.length * 3))
+            };
+
+            // Update UI
+            displayResults(currentEstimate);
+            showToast('Estimate calculated successfully!', 'success');
+        }
+
+        function displayResults(estimate) {
+            // Animate total
+            animateValue('totalEstimate', 0, estimate.totalCost, 1000, '$');
+            
+            // Update all metrics
+            document.getElementById('repairDays').textContent = estimate.repairDays;
+            document.getElementById('partsCount').textContent = estimate.breakdown.length;
+            
+            // Calculate labor and parts totals
+            let totalLabor = 0, totalParts = 0;
+            estimate.breakdown.forEach(item => {
+                totalLabor += item.labor;
+                totalParts += item.parts;
+            });
+            
+            document.getElementById('totalLabor').textContent = '$' + totalLabor.toLocaleString();
+            document.getElementById('totalParts').textContent = '$' + totalParts.toLocaleString();
+
+            // Show breakdown
+            const breakdownList = document.getElementById('breakdownList');
+            breakdownList.innerHTML = estimate.breakdown.map(item => `
+                <div class="flex items-center justify-between py-3 px-3 bg-slate-50 rounded-lg text-sm">
+                    <div>
+                        <p class="font-semibold text-slate-700">${item.name}</p>
+                        <p class="text-xs text-slate-500">Parts: $${item.parts.toLocaleString()} | Labor: $${item.labor.toLocaleString()}</p>
+                    </div>
+                    <span class="font-bold text-blue-600">$${item.total.toLocaleString()}</span>
+                </div>
+            `).join('');
+
+            document.getElementById('costBreakdown').classList.remove('hidden');
+
+            // Confidence score
+            document.getElementById('confidenceScore').textContent = `${estimate.confidence}%`;
+            document.getElementById('confidenceBar').style.width = `${estimate.confidence}%`;
+            document.getElementById('confidenceSection').classList.remove('hidden');
+
+            // Show actions
+            document.getElementById('actionsSection').classList.remove('hidden');
+        }
+
+        function animateValue(elementId, start, end, duration, prefix = '') {
+            const element = document.getElementById(elementId);
+            const range = end - start;
+            const startTime = performance.now();
+            
+            function update(currentTime) {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                const easeProgress = 1 - Math.pow(1 - progress, 3);
+                const current = Math.round(start + (range * easeProgress));
+                element.textContent = prefix + current.toLocaleString();
+                
+                if (progress < 1) {
+                    requestAnimationFrame(update);
+                }
+            }
+            
+            requestAnimationFrame(update);
+        }
+
+        function generateReport() {
+            if (!currentEstimate) {
+                showToast('Please calculate an estimate first', 'error');
+                return;
+            }
+
+            const reportContent = document.getElementById('reportContent');
+            const totalLabor = currentEstimate.breakdown.reduce((sum, item) => sum + item.labor, 0);
+            const totalParts = currentEstimate.breakdown.reduce((sum, item) => sum + item.parts, 0);
+            
+            reportContent.innerHTML = `
+                <div class="space-y-6">
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-5">
+                        <h4 class="text-base font-bold text-slate-800 mb-4">Vehicle Information</h4>
+                        <div class="grid grid-cols-2 gap-4 text-sm">
+                            <div><span class="text-slate-600">Make:</span><br><span class="font-semibold text-slate-800">${currentEstimate.make}</span></div>
+                            <div><span class="text-slate-600">Model:</span><br><span class="font-semibold text-slate-800">${currentEstimate.model}</span></div>
+                            <div><span class="text-slate-600">Year:</span><br><span class="font-semibold text-slate-800">${currentEstimate.year}</span></div>
+                            <div><span class="text-slate-600">Mileage:</span><br><span class="font-semibold text-slate-800">${currentEstimate.mileage || 'N/A'} mi</span></div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h4 class="text-base font-bold text-slate-800 mb-3">Damage Details</h4>
+                        <div class="space-y-3">
+                            <div class="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
+                                <span class="text-sm text-slate-600">Severity Level:</span>
+                                <span class="font-semibold text-slate-800">${currentEstimate.severity}%</span>
+                            </div>
+                            <div class="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
+                                <span class="text-sm text-slate-600">Repair Duration:</span>
+                                <span class="font-semibold text-slate-800">${currentEstimate.repairDays} days</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h4 class="text-base font-bold text-slate-800 mb-3">Cost Breakdown</h4>
+                        <div class="space-y-2">
+                            ${currentEstimate.breakdown.map(item => `
+                                <div class="flex justify-between items-start p-3 bg-slate-50 rounded-lg text-sm">
+                                    <div>
+                                        <p class="font-semibold text-slate-800">${item.name}</p>
+                                        <p class="text-xs text-slate-500 mt-1">Parts: $${item.parts.toLocaleString()} | Labor: $${item.labor.toLocaleString()} | Paint: $${item.paint.toLocaleString()}</p>
+                                    </div>
+                                    <span class="font-bold text-blue-600">$${item.total.toLocaleString()}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                    
+                    <div class="border-t-2 border-slate-200 pt-4">
+                        <div class="grid grid-cols-3 gap-4 mb-4">
+                            <div class="text-center">
+                                <p class="text-sm text-slate-600">Parts</p>
+                                <p class="text-lg font-bold text-slate-800">$${totalParts.toLocaleString()}</p>
+                            </div>
+                            <div class="text-center">
+                                <p class="text-sm text-slate-600">Labor</p>
+                                <p class="text-lg font-bold text-slate-800">$${totalLabor.toLocaleString()}</p>
+                            </div>
+                            <div class="text-center">
+                                <p class="text-sm text-slate-600">Confidence</p>
+                                <p class="text-lg font-bold text-blue-600">${currentEstimate.confidence}%</p>
+                            </div>
+                        </div>
+                        <div class="bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg p-4 text-white text-center">
+                            <p class="text-sm opacity-90">Total Estimated Cost</p>
+                            <p class="text-3xl font-bold">$${currentEstimate.totalCost.toLocaleString()}</p>
+                        </div>
+                        <p class="text-xs text-slate-500 text-center mt-3">Report generated on ${new Date().toLocaleDateString()}</p>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('reportModal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('reportModal').classList.add('hidden');
+        }
+
+        function printReport() {
+            const content = document.getElementById('reportContent').innerHTML;
+            const printWindow = window.open('', '', 'width=800,height=600');
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Motor Claim Estimate Report</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; margin: 20px; color: #1e293b; }
+                        h1 { color: #0066cc; margin-bottom: 30px; }
+                        .section { margin-bottom: 20px; page-break-inside: avoid; }
+                        .break { page-break-after: always; }
+                    </style>
+                </head>
+                <body>
+                    <h1>Motor Claim Estimate Report</h1>
+                    ${content}
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+            setTimeout(() => printWindow.print(), 250);
+        }
+
+        function shareEstimate() {
+            if (!currentEstimate) {
+                showToast('Please calculate an estimate first', 'error');
+                return;
+            }
+
+            const text = `Professional Motor Claim Estimate\n${currentEstimate.year} ${currentEstimate.make} ${currentEstimate.model}\nTotal Cost: $${currentEstimate.totalCost.toLocaleString()}\nRepair Days: ${currentEstimate.repairDays}`;
+            
+            if (navigator.share) {
+                navigator.share({ title: 'Motor Claim Estimate', text });
+            } else {
+                navigator.clipboard.writeText(text).then(() => {
+                    showToast('Estimate copied to clipboard!', 'success');
+                });
+            }
+        }
+
+        function toggleHistoryPanel() {
+            const panel = document.getElementById('historyPanel');
+            panel.classList.toggle('hidden');
+        }
+
+        function updateEstimatesHistory() {
+            const historyList = document.getElementById('historyList');
+            if (estimatesData.length === 0) {
+                historyList.innerHTML = '<p class="text-center text-slate-500 text-sm py-8">No estimates saved yet</p>';
+                return;
+            }
+
+            historyList.innerHTML = estimatesData.map(est => `
+                <div class="p-4 border border-slate-200 rounded-lg hover:bg-blue-50 cursor-pointer transition-colors" onclick="loadEstimate('${est.__backendId}')">
+                    <div class="flex justify-between items-start mb-2">
+                        <div>
+                            <p class="font-semibold text-slate-800">${est.vehicle_year} ${est.vehicle_make} ${est.vehicle_model}</p>
+                            <p class="text-xs text-slate-500">${new Date(est.timestamp).toLocaleDateString()}</p>
+                        </div>
+                        <span class="text-lg font-bold text-blue-600">$${parseInt(est.total_cost).toLocaleString()}</span>
+                    </div>
+                    <div class="flex gap-2 text-xs text-slate-600">
+                        <span>Status: <span class="font-semibold">${est.status}</span></span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function loadEstimate(estimateId) {
+            const estimate = estimatesData.find(e => e.__backendId === estimateId);
+            if (estimate) {
+                currentEstimate = {
+                    make: estimate.vehicle_make,
+                    model: estimate.vehicle_model,
+                    year: estimate.vehicle_year,
+                    mileage: estimate.mileage,
+                    severity: parseInt(estimate.severity),
+                    totalCost: parseInt(estimate.total_cost),
+                    breakdown: JSON.parse(estimate.damage_zones),
+                    partsNeeded: parseInt(estimate.damage_zones.split(',').length),
+                    repairDays: parseInt(estimate.repair_days),
+                    confidence: parseInt(estimate.confidence)
+                };
+                displayResults(currentEstimate);
+                toggleHistoryPanel();
+                showToast('Estimate loaded successfully!', 'success');
+            }
+        }
+
+        function saveEstimate() {
+            if (!currentEstimate) {
+                showToast('Please calculate an estimate first', 'error');
+                return;
+            }
+
+            if (estimatesData.length >= 999) {
+                showToast('Maximum limit of 999 estimates reached', 'error');
+                return;
+            }
+
+            const estimateData = {
+                claim_id: 'CLM-' + Date.now(),
+                vehicle_make: currentEstimate.make,
+                vehicle_model: currentEstimate.model,
+                vehicle_year: currentEstimate.year,
+                mileage: currentEstimate.mileage || '',
+                damage_zones: JSON.stringify(currentEstimate.breakdown),
+                severity: currentEstimate.severity.toString(),
+                total_cost: currentEstimate.totalCost.toString(),
+                repair_days: currentEstimate.repairDays.toString(),
+                confidence: currentEstimate.confidence.toString(),
+                additional_features: Array.from(selectedDamageZones).join(','),
+                timestamp: new Date().toISOString(),
+                status: 'Pending Review'
+            };
+
+            window.dataSdk.create(estimateData).then(result => {
+                if (result.isOk) {
+                    showToast('Estimate saved to cloud successfully!', 'success');
+                } else {
+                    showToast('Failed to save estimate', 'error');
+                }
+            });
+        }
+
+        function resetForm() {
+            document.getElementById('vehicleMake').value = '';
+            document.getElementById('vehicleModel').innerHTML = '<option value="">Select Model</option>';
+            document.getElementById('vehicleYear').value = '';
+            document.getElementById('mileage').value = '';
+            document.getElementById('damageSeverity').value = 50;
+            updateSeverity();
+            
+            document.querySelectorAll('.damage-zone').forEach(zone => {
+                zone.classList.remove('selected');
+            });
+            selectedDamageZones.clear();
+            
+            document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+            
+            document.getElementById('totalEstimate').textContent = '$0';
+            document.getElementById('repairDays').textContent = '0';
+            document.getElementById('partsCount').textContent = '0';
+            document.getElementById('costBreakdown').classList.add('hidden');
+            document.getElementById('confidenceSection').classList.add('hidden');
+            document.getElementById('actionsSection').classList.add('hidden');
+            
+            currentEstimate = null;
+            showToast('Form reset successfully', 'success');
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            const toastIcon = document.getElementById('toastIcon');
+            
+            toastMessage.textContent = message;
+            
+            if (type === 'error') {
+                toast.classList.remove('bg-slate-800');
+                toast.classList.add('bg-red-600');
+                toastIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>';
+            } else {
+                toast.classList.remove('bg-red-600');
+                toast.classList.add('bg-slate-800');
+                toastIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>';
+            }
+            
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+
+        // Initialize on load
+        (async () => {
+            init();
+            await window.dataSdk.init(dataHandler);
+        })();
+    </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9d4623ed1453a688',t:'MTc3MjE3OTE0MS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
